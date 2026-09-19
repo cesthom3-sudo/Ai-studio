@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.ThomasAiStudio" parent="android:Theme.Material.NoActionBar" />
+</resources>
