@@ -1,7 +1,5 @@
 """
-Resolves the configured provider name (from .env) to a concrete implementation.
-Only 'demo' ships fully wired. Add real providers here as needed — see
-providers/example_http_provider.py for a template calling a real HTTP AI API.
+Provider factory for Thomas AI Studio.
 """
 
 from app.config import settings
@@ -19,6 +17,7 @@ from app.providers.demo import (
     DemoTTSProvider,
     DemoVideoProvider,
 )
+from app.providers.openai_image_provider import OpenAIImageProvider
 
 
 def get_text_provider() -> AITextProvider:
@@ -26,6 +25,9 @@ def get_text_provider() -> AITextProvider:
 
 
 def get_image_provider() -> AIImageProvider:
+    if settings.image_provider.lower() == "openai":
+        return OpenAIImageProvider()
+
     return DemoImageProvider()
 
 
