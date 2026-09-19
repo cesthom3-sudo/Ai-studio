@@ -18,7 +18,6 @@ import com.thomas.aistudio.data.model.ImageGenerateRequest
 import com.thomas.aistudio.ui.common.PrimaryButton
 import com.thomas.aistudio.ui.common.SectionTitle
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private val presets = listOf(
@@ -40,18 +39,14 @@ private val aspectRatios = listOf(
     "4:5"
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageGeneratorScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var prompt by remember { mutableStateOf("") }
-
-    // Explicit defaults instead of presets.first() / aspectRatios.first()
     var selectedPreset by remember { mutableStateOf("Cinematic") }
     var selectedAspect by remember { mutableStateOf("1:1") }
-
     var variations by remember { mutableStateOf(1) }
     var isLoading by remember { mutableStateOf(false) }
     var resultUrl by remember { mutableStateOf<String?>(null) }
@@ -68,7 +63,6 @@ fun ImageGeneratorScreen() {
         Column(
             Modifier.padding(horizontal = 20.dp)
         ) {
-
             OutlinedTextField(
                 value = prompt,
                 onValueChange = { prompt = it },
@@ -91,12 +85,8 @@ fun ImageGeneratorScreen() {
                 items(presets) { preset ->
                     FilterChip(
                         selected = preset == selectedPreset,
-                        onClick = {
-                            selectedPreset = preset
-                        },
-                        label = {
-                            Text(preset)
-                        }
+                        onClick = { selectedPreset = preset },
+                        label = { Text(preset) }
                     )
                 }
             }
@@ -113,12 +103,8 @@ fun ImageGeneratorScreen() {
                 items(aspectRatios) { ratio ->
                     FilterChip(
                         selected = ratio == selectedAspect,
-                        onClick = {
-                            selectedAspect = ratio
-                        },
-                        label = {
-                            Text(ratio)
-                        }
+                        onClick = { selectedAspect = ratio },
+                        label = { Text(ratio) }
                     )
                 }
             }
@@ -133,9 +119,7 @@ fun ImageGeneratorScreen() {
 
                 IconButtonRow(
                     current = variations,
-                    onChange = {
-                        variations = it
-                    }
+                    onChange = { variations = it }
                 )
             }
 
@@ -151,11 +135,7 @@ fun ImageGeneratorScreen() {
             }
 
             PrimaryButton(
-                text = if (isLoading) {
-                    "Generating..."
-                } else {
-                    "Generate"
-                },
+                text = if (isLoading) "Generating..." else "Generate",
                 enabled = prompt.isNotBlank() && !isLoading,
                 onClick = {
                     errorText = null
@@ -164,11 +144,22 @@ fun ImageGeneratorScreen() {
 
                     scope.launch {
                         try {
-                            val base = first(
-                                AppSettings.backendUrlFlow(context)
-                            )
+                            // Read the backend URL from the settings flow.
+                            var baseUrl: String? = null
 
-                            val api = ApiClient.create(base)
+                            AppSettings.backendUrlFlow(context)
+                                .collect { value ->
+                                    baseUrl = value
+                                    return@collect
+                                }
+
+                            if (baseUrl.isNullOrBlank()) {
+                                throw IllegalStateException(
+                                    "Backend URL is not configured."
+                                )
+                            }
+
+                            val api = ApiClient.create(baseUrl!!)
 
                             val job = api.generateImage(
                                 ImageGenerateRequest(
@@ -209,7 +200,6 @@ fun ImageGeneratorScreen() {
             Spacer(Modifier.height(20.dp))
 
             resultUrl?.let { url ->
-
                 AsyncImage(
                     model = url,
                     contentDescription = "Generated image",
@@ -225,8 +215,7 @@ fun ImageGeneratorScreen() {
                 ) {
                     OutlinedButton(
                         onClick = {
-                            // Regenerate can be connected to the same generation
-                            // request in a later iteration.
+                            // Regenerate
                         }
                     ) {
                         Text("Regenerate")
