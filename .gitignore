@@ -1,0 +1,25 @@
+# Secrets
+.env
+backend/.env
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/captures/
+android/.cxx/
+
+# Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/venv/
+backend/.venv/
+backend/storage/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
